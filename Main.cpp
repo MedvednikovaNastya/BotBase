@@ -14,8 +14,9 @@ void runTask1(int episodes) {
 
     try {
         game->loadConfig(path + "/scenarios/task1.cfg");
-       // game->setRenderWeapon(true);
-       // game->setWindowVisible(true);
+        game->setScreenResolution(vizdoom::RES_640X480);
+        game->setWindowVisible(true);
+        game->setRenderWeapon(true);
         game->init();
     }
     catch (vizdoom::FileDoesNotExistException e) {
@@ -39,9 +40,9 @@ void runTask1(int episodes) {
 
             cv::extractChannel(screenBuff, greyscale, 2);
 
-            cv::threshold(greyscale, greyscale, 200, 255, cv::THRESH_BINARY);
+            cv::threshold(greyscale, greyscale, 180, 255, cv::THRESH_BINARY);
 
-            cv::imshow("Output Window", screenBuff);
+            cv::imshow("Output Window", greyscale);
 
             double reward = game->makeAction({ 0, 0, 0 });
 
