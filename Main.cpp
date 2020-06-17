@@ -4,16 +4,11 @@
 #include <ViZDoom.h>
 
 
-using namespace vizdoom;
-using namespace cv;
-using namespace std;
-
-
 int main()
 {
-    DoomGame* game = new DoomGame();
+    vizdoom::DoomGame* game = new vizdoom::DoomGame();
     try {
-        string path = "C:\practice\practice\vizdoom";
+        std::string path = "C:\practice\practice\vizdoom";
         game->setViZDoomPath(path + "\vizdoom.exe");
         game->setDoomGamePath(path + "\freedoom2.wad");
         game->loadConfig(path + "\scenarios\basic.cfg");
@@ -21,15 +16,15 @@ int main()
         game->setWindowVisible(true);
         game->init();
     }
-    catch (exception e) {
-        cout << e.what() << endl;
+    catch (std::exception e) {
+        std:: cout << e.what() << std::endl;
         return 0;
     }
-    namedWindow("Control Window", WINDOW_AUTOSIZE);
-    auto image = Mat(480, 640, CV_BACK);
+    cv::namedWindow("Control Window", cv::WINDOW_AUTOSIZE);
+    auto image = cv::Mat(480, 640, CV_BACK);
 
     auto episodes = 10;
-    unsigned int sleepTime = 1000 / DEFAULT_TICRATE;
+    unsigned int sleepTime = 1000 / vizdoom::DEFAULT_TICRATE;
 
 
     std::vector<double> actions[3];
@@ -39,7 +34,7 @@ int main()
 
     for (auto i = 0; i < episodes; i++) {
         game->newEpisode();
-        cout << "Episode #" << i << endl;
+        std::cout << "Episode #" << i << std::endl;
 
         auto flag1 = 30;
         auto flag2 = true;
@@ -52,16 +47,18 @@ int main()
             if (flag1 > 0) {
                 game->makeAction(actions[0]);
                 flag1--;
-            } else if (flag2 == true) {
+            }
+            else if (flag2 == true) {
                 game->makeAction(actions[1]);
-            } else {
+            }
+            else {
                 game->makeAction(actions[2]);
             }
 
             flag2 = !flag2;
-            waitKey(sleepTime);
+            cv::waitKey(sleepTime);
         }
-        cout << game->getTotalReward() << endl;
+        std::cout << game->getTotalReward() << std::endl;
     }
 
     game->close();
