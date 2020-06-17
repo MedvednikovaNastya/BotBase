@@ -5,7 +5,7 @@
 
 
 auto game = std::make_unique<vizdoom::DoomGame>();
-std::string path = "C:/practice/practice/vizdoom";
+std::string path = "C:/practice/practice/vizdoom"; //C:/Users/Анастасия/mine/Сессия/practice/practice/vizdoom
 const unsigned int sleepTime = 1000 / vizdoom::DEFAULT_TICRATE;
 auto screenBuff = cv::Mat(480, 640, CV_8UC3);
 
