@@ -50,17 +50,15 @@ void RunTask1(int episodes)
             double minval; double maxval; cv::Point minLoc; cv::Point maxLoc;
             minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
             rectangle(img, maxLoc, cv::Point(maxLoc.x + temp1.cols, maxLoc.y + temp1.rows), cv::Scalar::all(255), 2, 8, 0);
-            rectangle(result, minLoc, cv::Point(minLoc.x + temp1.cols, minLoc.y + temp1.rows), cv::Scalar::all(255), 2, 8, 0);
-
-           // cv::threshold(img, img, 254, 255, CV_THRESH_BINARY);
-            
-            //img.at<uchar>(240, 320) = 120;
-            //std::cout << img.cols << " " << img.rows;
 
             cv::imshow("Origin", img);
-            cv::imshow("Result", result);
 
-            game->makeAction({0, 1, 0});
+            if (maxLoc.x > 260 && maxLoc.x < 300) {
+                game->makeAction(action[2]);
+            }
+            else if (maxLoc.x >= 300) {
+                game->makeAction(action[1]);
+            } else if(maxLoc.x <= 260) game->makeAction(action[0]);
 
             cv::waitKey(sleepTime);
 
