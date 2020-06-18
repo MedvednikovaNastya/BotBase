@@ -8,13 +8,14 @@ auto game = std::make_unique<vizdoom::DoomGame>();
 const unsigned int sleepTime = 1000 / vizdoom::DEFAULT_TICRATE;
 auto screenBuff = cv::Mat(480, 640, CV_8UC3);
 const char* filename = "./sprites/Enemies/heada1.png";
-
+const char* akainu = "./sprites/Enemies/akainu.png";
 
 void RunTask1(int episodes)
 {
     try
     {
         game->loadConfig(path + "/scenarios/task1.cfg");
+        //game->setWindowVisible(false);
         game->init();
     }
     catch (std::exception& e)
@@ -38,6 +39,7 @@ void RunTask1(int episodes)
 
             cv::Mat img = screenBuff;
             cv::Mat temp1 = cv::imread(filename);
+            cv::Mat akainuMat = cv::imread(akainu);
             cv::Mat result;
 
             int result_cols = img.cols - temp1.cols + 1;
@@ -51,6 +53,8 @@ void RunTask1(int episodes)
             minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
             rectangle(img, maxLoc, cv::Point(maxLoc.x + temp1.cols, maxLoc.y + temp1.rows), cv::Scalar::all(255), 2, 8, 0);
 
+            akainuMat.copyTo(img(cv::Rect(maxLoc.x, maxLoc.y, akainuMat.cols, akainuMat.rows)));
+
             cv::imshow("Origin", img);
 
             if (maxLoc.x > 260 && maxLoc.x < 300) {
@@ -58,7 +62,8 @@ void RunTask1(int episodes)
             }
             else if (maxLoc.x >= 300) {
                 game->makeAction(action[1]);
-            } else if(maxLoc.x <= 260) game->makeAction(action[0]);
+            }
+            else if (maxLoc.x <= 260) game->makeAction(action[0]);
 
             cv::waitKey(sleepTime);
 
