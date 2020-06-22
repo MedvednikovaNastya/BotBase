@@ -4,10 +4,11 @@
 #include "windows.h"
 #include <cmath>
 
-std::string path = "C:/Users/Анастасия/mine/Сессия/practice/practice/vizdoom";
+std::string path = "C:/practice/practice/vizdoom";
 auto game = std::make_unique<vizdoom::DoomGame>();
 const unsigned int sleepTime = 3000 / vizdoom::DEFAULT_TICRATE;
 auto screenBuff = cv::Mat(480, 640, CV_8UC3);
+<<<<<<< HEAD
 const char* headaFront = "./sprites/Enemies/heada1.png";
 const char* medikit = "./sprites/Pickups/media0.png";
 const char* akainu = "./sprites/Enemies/akainu.png";
@@ -24,12 +25,17 @@ double angleBySides(double line1, double line2, double opLine) {
     double angle = acos(cosAn) * 180 / 3.14;
     return angle;
 }
+=======
+const char* filename = "./sprites/Enemies/heada1.png";
+const char* akainu = "./sprites/Enemies/akainu.png";
+>>>>>>> 1702f0f63fd685c30567796f935c044f9def4421
 
 void runTask1(int episodes)
 {
     try
     {
         game->loadConfig(path + "/scenarios/task1.cfg");
+        //game->setWindowVisible(false);
         game->init();
     }
     catch (std::exception& e)
@@ -38,6 +44,10 @@ void runTask1(int episodes)
     }
 
     auto greyscale = cv::Mat(480, 640, CV_8UC1);
+<<<<<<< HEAD
+=======
+    std::vector<std::vector<double>> action = { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+>>>>>>> 1702f0f63fd685c30567796f935c044f9def4421
 
     for (auto i = 0; i < episodes; i++)
     {
@@ -51,7 +61,11 @@ void runTask1(int episodes)
             std::memcpy(screenBuff.data, gamestate->screenBuffer->data(), gamestate->screenBuffer->size());
 
             cv::Mat img = screenBuff;
+<<<<<<< HEAD
             cv::Mat temp1 = cv::imread(headaFront);
+=======
+            cv::Mat temp1 = cv::imread(filename);
+>>>>>>> 1702f0f63fd685c30567796f935c044f9def4421
             cv::Mat akainuMat = cv::imread(akainu);
             cv::Mat result;
 
@@ -61,6 +75,7 @@ void runTask1(int episodes)
             result.create(result_rows, result_cols, CV_32FC1);
             matchTemplate(img, temp1, result, 4);
             normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+<<<<<<< HEAD
 
             double minval; double maxval; cv::Point minLoc; cv::Point maxLoc;
             minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
@@ -133,8 +148,27 @@ void runTask1vol2(int episodes) { //нерабочий вариант
             cv::circle(greyscale, cv::Point(centers.at<float>(1, 0), centers.at<float>(1, 1)), 20, cv::Scalar::all(255));
 
             cv::imshow("Gray", greyscale);
+=======
+
+            double minval; double maxval; cv::Point minLoc; cv::Point maxLoc;
+            minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
+            rectangle(img, maxLoc, cv::Point(maxLoc.x + temp1.cols, maxLoc.y + temp1.rows), cv::Scalar::all(255), 2, 8, 0);
+
+            akainuMat.copyTo(img(cv::Rect(maxLoc.x, maxLoc.y, akainuMat.cols, akainuMat.rows)));
+
+            cv::imshow("Origin", img);
+
+            if (maxLoc.x > 260 && maxLoc.x < 300) {
+                game->makeAction(action[2]);
+            }
+            else if (maxLoc.x >= 300) {
+                game->makeAction(action[1]);
+            }
+            else if (maxLoc.x <= 260) game->makeAction(action[0]);
+>>>>>>> 1702f0f63fd685c30567796f935c044f9def4421
 
             cv::waitKey(sleepTime);
+
         }
 
         total += game->getTotalReward();
@@ -222,6 +256,12 @@ int main()
     game->setDoomGamePath(path + "/freedoom2.wad");
 
     auto episodes = 10;
+<<<<<<< HEAD
+=======
+
+
+    RunTask1(episodes);
+>>>>>>> 1702f0f63fd685c30567796f935c044f9def4421
 
     runTask2(episodes);
     std::cout << "Total Reward: " << float(total) / episodes;
