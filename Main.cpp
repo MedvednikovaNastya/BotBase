@@ -12,7 +12,7 @@ const char* headaFront = "./sprites/Enemies/heada1.png";
 const char* headaSide = "./sprites/Enemies/heada2a8.png";
 const char* medikit = "./sprites/Pickups/media0.png";
 const char* akainu = "./sprites/Enemies/akainu.png";
-std::vector<std::vector<double>> action = { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+std::vector<std::vector<double>> action = { {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0} , {0, 0, 0, 1} };
 int total = 0;
 
 
@@ -67,17 +67,17 @@ void runTask1(int episodes)
             double minval; double maxval; cv::Point minLoc; cv::Point maxLoc;
 
             resultF.create(resultF_rows, resultF_cols, CV_32FC1);
-            matchTemplate(img, front, resultF, 4);
+            matchTemplate(img, front, resultF, 5);
             normalize(resultF, resultF, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
             minMaxLoc(resultF, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
             if (maxLoc.y > 240) {
                 resultL.create(resultS_rows, resultS_cols, CV_32FC1);
-                matchTemplate(img, left, resultL, 4);
+                matchTemplate(img, left, resultL, 5);
                 normalize(resultL, resultL, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
                 minMaxLoc(resultL, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
                 if (maxLoc.y > 240) {
                     resultR.create(resultS_rows, resultS_cols, CV_32FC1);
-                    matchTemplate(img, right, resultR, 4);
+                    matchTemplate(img, right, resultR, 5);
                     normalize(resultR, resultR, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
                     minMaxLoc(resultR, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
                 }
@@ -104,7 +104,7 @@ void runTask1(int episodes)
         std::cout << std::endl << game->getTotalReward() << std::endl;
     }
 }
-void runTask2(int episodes) { //валится на 5м тесте; использование второго спрайта не помогает
+void runTask2(int episodes) { 
     try
     {
         game->loadConfig(path + "/scenarios/task2.cfg");
@@ -143,17 +143,17 @@ void runTask2(int episodes) { //валится на 5м тесте; использование второго спрай
             double minval; double maxval; cv::Point minLoc; cv::Point maxLoc;
 
             resultF.create(resultF_rows, resultF_cols, CV_32FC1);
-            matchTemplate(img, front, resultF, 4);
+            matchTemplate(img, front, resultF, 5);
             normalize(resultF, resultF, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
             minMaxLoc(resultF, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
             if (maxLoc.y > 240) {
                 resultL.create(resultS_rows, resultS_cols, CV_32FC1);
-                matchTemplate(img, left, resultL, 4);
+                matchTemplate(img, left, resultL, 5);
                 normalize(resultL, resultL, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
                 minMaxLoc(resultL, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
                 if (maxLoc.y > 240) {
                     resultR.create(resultS_rows, resultS_cols, CV_32FC1);
-                    matchTemplate(img, right, resultR, 4);
+                    matchTemplate(img, right, resultR, 5);
                     normalize(resultR, resultR, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
                     minMaxLoc(resultR, &minval, &maxval, &minLoc, &maxLoc, cv::Mat());
                 }
@@ -246,8 +246,6 @@ void runTask3(int episodes) { //пока только шаблон, можно даже не запускать
         std::cout << e.what() << std::endl;
     }
 
-    auto greyscale = cv::Mat(480, 640, CV_8UC1);
-
     for (auto i = 0; i < episodes; i++)
     {
         game->newEpisode();
@@ -259,12 +257,41 @@ void runTask3(int episodes) { //пока только шаблон, можно даже не запускать
 
             std::memcpy(screenBuff.data, gamestate->screenBuffer->data(), gamestate->screenBuffer->size());
 
+            cv::Mat img = screenBuff;
+            cv::Mat medi = cv::imread(medikit);
+            cv::Mat result;
+
+            cv::namedWindow("Origin", CV_WINDOW_AUTOSIZE);
+            cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
+
+            double minval, maxval; cv::Point minLoc, maxLoc;
+            int res_cols = img.cols - medi.cols + 1;
+            int res_rows = img.rows - medi.rows + 1;
+            result.create(res_cols, res_rows, CV_32FC1);
+
+            cv::matchTemplate(img, medi, result, 4);
+            cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+            cv::Rect roi(290, 0, 60, result.rows);
+            result = result(roi);
+            cv::minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc);
+
+            circle(img, cv::Point(300 + maxLoc.x, maxLoc.y + 10), 8, cv::Scalar(0, 255, 255), -1);
+
+            if (maxLoc.y < 390) {
+                if (290 + maxLoc.x < 300) game->makeAction(action[0]);
+                else if(290 + maxLoc.x > 340) game->makeAction(action[1]);
+               else game->makeAction(action[3]);
+            }
+            else game->makeAction(action[0]);
+
+            cv::imshow("Origin", img);
+            cv::imshow("Result", result);
+         
             cv::waitKey(sleepTime);
 
         }
 
-        total += game->getTotalReward();
-        std::cout << std::endl << game->getTotalReward() << std::endl;
+        std::cout << std::endl << game->getEpisodeTime() << std::endl;
     }
 }
 
@@ -275,7 +302,7 @@ int main()
 
     auto episodes = 10;
 
-    runTask2vol2(episodes);
+    runTask3(episodes);
     std::cout << "Total Reward: " << float(total) / episodes;
 
     game->close();
