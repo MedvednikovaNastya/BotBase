@@ -12,9 +12,8 @@ const char* headaFront = "./sprites/Enemies/heada1.png";
 const char* headaSide = "./sprites/Enemies/heada2a8.png";
 const char* medikit = "./sprites/Pickups/media0.png";
 const char* akainu = "./sprites/Enemies/akainu.png";
-std::vector<std::vector<double>> action = { {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0} , {0, 0, 0, 1} };
+std::vector<std::vector<double>> action = { {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 1} , {0, 0, 0, 0} };
 int total = 0;
-
 
 int lengOfLine(int x1, int y1, int x2, int y2) {
     double leng = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
@@ -25,7 +24,6 @@ double angleBySides(double line1, double line2, double opLine) {
     double angle = acos(cosAn) * 180 / 3.14;
     return angle;
 }
-
 void runTask1(int episodes)
 {
     try
@@ -246,6 +244,9 @@ void runTask3(int episodes) { //пока только шаблон, можно даже не запускать
         std::cout << e.what() << std::endl;
     }
 
+    cv::namedWindow("Origin", CV_WINDOW_AUTOSIZE);
+    cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
+
     for (auto i = 0; i < episodes; i++)
     {
         game->newEpisode();
@@ -260,9 +261,6 @@ void runTask3(int episodes) { //пока только шаблон, можно даже не запускать
             cv::Mat img = screenBuff;
             cv::Mat medi = cv::imread(medikit);
             cv::Mat result;
-
-            cv::namedWindow("Origin", CV_WINDOW_AUTOSIZE);
-            cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
 
             double minval, maxval; cv::Point minLoc, maxLoc;
             int res_cols = img.cols - medi.cols + 1;
@@ -290,7 +288,132 @@ void runTask3(int episodes) { //пока только шаблон, можно даже не запускать
             cv::waitKey(sleepTime);
 
         }
+        total += game->getEpisodeTime();
+        std::cout << std::endl << game->getEpisodeTime() << std::endl;
+    }
+}
+void runTask4(int episodes) {
+    try
+    {
+        game->loadConfig(path + "/scenarios/task4.cfg");
+        game->init();
+    }
+    catch (std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 
+    cv::namedWindow("Origin", CV_WINDOW_AUTOSIZE);
+    cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
+
+    for (auto i = 0; i < episodes; i++)
+    {
+        game->newEpisode();
+        std::cout << "Episode #" << i + 1 << std::endl;
+
+        while (!game->isEpisodeFinished())
+        {
+            const auto& gamestate = game->getState();
+
+            std::memcpy(screenBuff.data, gamestate->screenBuffer->data(), gamestate->screenBuffer->size());
+
+            cv::Mat img = screenBuff;
+            cv::Mat medi = cv::imread(medikit);
+            cv::Mat result;
+          
+            double minval, maxval; cv::Point minLoc, maxLoc;
+            int res_cols = img.cols - medi.cols + 1;
+            int res_rows = img.rows - medi.rows + 1;
+            result.create(res_cols, res_rows, CV_32FC1);
+
+            cv::matchTemplate(img, medi, result, 4);
+            cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+            cv::Rect roi(260, 0, 120, result.rows - 50);
+            result = result(roi);
+            cv::minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc);
+
+            circle(img, cv::Point(300 + maxLoc.x, maxLoc.y + 10), 8, cv::Scalar(0, 255, 255), -1);
+          
+            if (maxLoc.y < 390) {
+                if (290 + maxLoc.x < 300) game->makeAction(action[0]);
+                else if (290 + maxLoc.x > 340) game->makeAction(action[1]);
+                else game->makeAction(action[3]);
+            }
+            else for (int k = 0; k < 6; k++) game->makeAction(action[1]);
+
+            cv::imshow("Origin", img);
+            cv::imshow("Result", result);
+
+            cv::waitKey(sleepTime);
+
+        }
+
+        total += game->getEpisodeTime();
+        std::cout << std::endl << game->getEpisodeTime() << std::endl;
+    }
+}
+void runTask5(int episodes) {
+    try
+    {
+        game->loadConfig(path + "/scenarios/task5.cfg");
+        game->init();
+    }
+    catch (std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+
+    cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
+   
+    IplImage* data;
+    IplImage* grey = cvCreateImage(cv::Size(640, 480), IPL_DEPTH_8U, 1);
+    IplImage* result = cvCreateImage(cv::Size(640, 480), IPL_DEPTH_8U, 1);
+    cv::Mat resultMat;
+    int whiteX, act;
+
+    for (auto i = 0; i < episodes; i++)
+    {
+        game->newEpisode();
+        std::cout << "Episode #" << i + 1 << std::endl;
+
+        while (!game->isEpisodeFinished())
+        {
+            const auto& gamestate = game->getState();
+
+            std::memcpy(screenBuff.data, gamestate->screenBuffer->data(), gamestate->screenBuffer->size());
+
+            data = (&(IplImage)screenBuff);
+
+            cvCvtColor(data, grey, CV_RGB2GRAY);
+            cvCanny(grey, result, 200, 255, 3);
+ 
+            resultMat = cv::cvarrToMat(result);
+
+            whiteX = 320;
+            for (int k =50; k < 590; k++) {
+                if (resultMat.at<char>(240, k) < 0) {
+                    whiteX = k;
+                    break;
+                }
+            }
+
+            act = 3;
+            if (whiteX < 320) act = 1;
+            else if (whiteX > 320) act = 0;
+          
+            game->makeAction(action[act]);
+
+            line(resultMat, cvPoint(0, 240), cvPoint(639, 240), cvScalar(255), 2);
+            line(resultMat, cvPoint(50, 0), cvPoint(50, 479), cvScalar(255), 2);
+            line(resultMat, cvPoint(590, 0), cvPoint(590, 479), cvScalar(255), 2);
+            line(resultMat, cvPoint(320, 0), cvPoint(320, 479), cvScalar(255), 2);
+
+            cv::imshow("Result", resultMat);
+
+            cv::waitKey(sleepTime);
+
+        }
+        total += game->getEpisodeTime();
         std::cout << std::endl << game->getEpisodeTime() << std::endl;
     }
 }
@@ -302,8 +425,8 @@ int main()
 
     auto episodes = 10;
 
-    runTask3(episodes);
-    std::cout << "Total Reward: " << float(total) / episodes;
+    runTask5(episodes);
+    std::cout << "Total Reward (or time): " << float(total) / episodes;
 
     game->close();
 }
