@@ -564,28 +564,30 @@ void runTask9(int episodes) {
                     rch = true;
                     triangle--;
                 }
-            } else 
-            if (!lch) {
-                for (int k = 50; k < 320; k++) {
-                    for (int k1 = 180; k1 < 240; k1++) {
-                        if (resultMat.at<char>(k1, k) != 0) {
-                            whiteXl = k;
-                            break;
+            }
+            else
+                if (!lch) {
+                    for (int k = 50; k < 320; k++) {
+                        for (int k1 = 180; k1 < 240; k1++) {
+                            if (resultMat.at<char>(k1, k) != 0) {
+                                whiteXl = k;
+                                break;
+                            }
+                            if (whiteXl > 0) break;
                         }
-                        if (whiteXl > 0) break;
                     }
-                }
-                if (whiteXl < 295) {
-                    game->makeAction({ 0, 0, 0, 0, 1, 0, 0, 0 });
-                }
-                else {
-                    game->makeAction({ 0, 0, 0, 0, 0, 0, 0, 1 });
-                    lch = true;
-                    triangle--;
-                }
+                    if (whiteXl < 295) {
+                        game->makeAction({ 0, 0, 0, 0, 1, 0, 0, 0 });
+                    }
+                    else {
+                        game->makeAction({ 0, 0, 0, 0, 0, 0, 0, 1 });
+                        lch = true;
+                        triangle--;
+                    }
 
-            } else game->makeAction({ 0, 0, 1, 0, 0, 0, 0, 0 }); 
-            
+                }
+                else game->makeAction({ 0, 0, 1, 0, 0, 0, 0, 0 });
+
             line(resultMat, cv::Point(0, 250), cv::Point(639, 250), cv::Scalar(255, 255, 255), 2);
             line(resultMat, cv::Point(589, 180), cv::Point(320, 240), cv::Scalar(255, 255, 255), 2);
             line(resultMat, cv::Point(50, 180), cv::Point(320, 240), cv::Scalar(255, 255, 255), 2);
