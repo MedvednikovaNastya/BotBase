@@ -13,6 +13,7 @@ const char* headaSide = "./sprites/Enemies/heada2a8.png";
 const char* worm = "./sprites/Enemies/sarga1.png";
 const char* warrior = "./sprites/Enemies/cposa1.png";
 const char* medikit = "./sprites/Pickups/media0.png";
+const char* bomb = "./sprites/Pickups/bon1a0.png";
 const char* akainu = "./sprites/Enemies/akainu.png";
 std::vector<std::vector<double>> action = { {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0},  {0, 0, 0, 1} , {0, 0, 0, 0} };
 int total = 0;
@@ -294,7 +295,7 @@ void runTask3(int episodes) {
         std::cout << std::endl << game->getEpisodeTime() << std::endl;
     }
 }
-void runTask4(int episodes) {
+void runTask4(int episodes) { //теперь бот избегает бомбы, но средний результат ниже, нежели при сборе всего без разбора
     try
     {
         game->loadConfig(path + "/scenarios/task4.cfg");
@@ -306,7 +307,9 @@ void runTask4(int episodes) {
     }
 
     cv::namedWindow("Origin", CV_WINDOW_AUTOSIZE);
+    cv::namedWindow("Gray", CV_WINDOW_AUTOSIZE);
     cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
+    int whiteVal;
 
     for (auto i = 0; i < episodes; i++)
     {
@@ -321,12 +324,17 @@ void runTask4(int episodes) {
 
             cv::Mat img = screenBuff;
             cv::Mat medi = cv::imread(medikit);
-            cv::Mat result;
+            cv::Mat bon = cv::imread(bomb);
+            cv::Mat result, gray;
           
             double minval, maxval; cv::Point minLoc, maxLoc;
             int res_cols = img.cols - medi.cols + 1;
             int res_rows = img.rows - medi.rows + 1;
             result.create(res_cols, res_rows, CV_32FC1);
+            
+            gray.create(480, 640, CV_8UC1);
+            cv::extractChannel(img, gray, 0);
+            cv::threshold(gray, gray, 235, 255, CV_THRESH_BINARY);
 
             cv::matchTemplate(img, medi, result, 4);
             cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
@@ -334,9 +342,17 @@ void runTask4(int episodes) {
             result = result(roi);
             cv::minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc);
 
-            circle(img, cv::Point(300 + maxLoc.x, maxLoc.y + 10), 8, cv::Scalar(0, 255, 255), -1);
+            circle(img, cv::Point(290 + maxLoc.x, maxLoc.y), 8, cv::Scalar(0, 255, 255), -1);
+
+            whiteVal = 0;
+            for (int j = int(290 + maxLoc.x - 20); j < int(290 + maxLoc.x); j++) {
+                 for (int k = int(maxLoc.y - 10); k < int(maxLoc.y + 20); k++) {
+                     if (gray.at<uchar>(k, j) == 255) whiteVal++;
+                 }
+             }
+            circle(gray, cv::Point(290 + maxLoc.x, maxLoc.y), 8, cv::Scalar(255, 255, 255), 1);
           
-            if (maxLoc.y < 390) {
+            if (maxLoc.y < 390 && whiteVal < 30) {
                 if (290 + maxLoc.x < 300) game->makeAction(action[0]);
                 else if (290 + maxLoc.x > 340) game->makeAction(action[1]);
                 else game->makeAction(action[3]);
@@ -344,6 +360,7 @@ void runTask4(int episodes) {
             else for (int k = 0; k < 6; k++) game->makeAction(action[1]);
 
             cv::imshow("Origin", img);
+            cv::imshow("Gray", gray);
             cv::imshow("Result", result);
 
             cv::waitKey(sleepTime);
@@ -353,7 +370,7 @@ void runTask4(int episodes) {
         total += game->getEpisodeTime();
         std::cout << std::endl << game->getEpisodeTime() << std::endl;
     }
-}
+} 
 void runTask5(int episodes) {
     try
     {
@@ -391,8 +408,8 @@ void runTask5(int episodes) {
  
             resultMat = cv::cvarrToMat(result);
 
-            whiteX = 320;
-            for (int k =50; k < 590; k++) {
+            whiteX = -1;
+            for (int k = 50; k < 590; k++) {
                 if (resultMat.at<char>(240, k) < 0) {
                     whiteX = k;
                     break;
@@ -400,8 +417,10 @@ void runTask5(int episodes) {
             }
 
             act = 4;
-            if (whiteX < 320) act = 1;
-            else if (whiteX > 320) act = 0;
+            if (whiteX != -1) {
+                if (whiteX <= 320) act = 1;
+                else if (whiteX > 320) act = 0;
+            }
           
             game->makeAction(action[act]);
 
@@ -419,7 +438,7 @@ void runTask5(int episodes) {
         std::cout << std::endl << game->getEpisodeTime() << std::endl;
     }
 }
-void runTask7(int episodes) {
+void runTask7(int episodes) {  //бот доворачиваетс€ в обе стороны дл€ нахождени€ врагов
     try {
         game->loadConfig(path + "/scenarios/task7.cfg");
         game->init();
@@ -435,7 +454,7 @@ void runTask7(int episodes) {
     IplImage* result = cvCreateImage(cv::Size(640, 480), IPL_DEPTH_8U, 1);
     cv::Mat resultMat;
     int whiteX, act;
-
+    bool stop = false;
 
     for (auto i = 0; i < episodes; i++)
     {
@@ -455,17 +474,25 @@ void runTask7(int episodes) {
             resultMat = cv::cvarrToMat(result);
 
             whiteX = -1;
-            for (int k = 310; k < 330; k++) {
-                if (resultMat.at<char>(230, k) < 0) {
+            for (int k = 200; k < 440; k++) {
+                if (resultMat.at<char>(235, k) < 0) {
                     whiteX = k;
                     break;
                 }
             }
 
             act = 1;
-            if (whiteX != -1) act = 3;
+            if (whiteX != -1 || !stop) {
+                if (whiteX > 310 && whiteX < 325) {
+                    act = 3;
+                    stop = true;
+                }
+                else if (whiteX <= 310) act = 0;
+                else if (whiteX >= 325) act = 1;
+            }
+            else stop = false;
 
-            line(resultMat, cvPoint(0, 230), cvPoint(639, 230), cvScalar(255), 2);
+            line(resultMat, cvPoint(0, 235), cvPoint(639, 235), cvScalar(255), 2);
 
             game->makeAction(action[act]);
 
@@ -599,6 +626,7 @@ void runTask9(int episodes) {
     }
 }
 
+
 int main()
 {
     game->setViZDoomPath(path + "/vizdoom.exe");
@@ -606,7 +634,7 @@ int main()
 
     auto episodes = 10;
 
-    runTask9(episodes);
+    runTask5(episodes);
     std::cout << "Total Reward (or time): " << float(total) / episodes;
 
     game->close();
