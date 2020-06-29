@@ -1,4 +1,4 @@
-#include <iostream>
+п»ї#include <iostream>
 #include <opencv2/opencv.hpp>
 #include <ViZDoom.h>
 #include "windows.h"
@@ -272,15 +272,15 @@ void runTask3(int episodes) {
 
             cv::matchTemplate(img, medi, result, 4);
             cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
-            cv::Rect roi(290, 0, 60, result.rows);
+            cv::Rect roi(230, 0, 180, result.rows);
             result = result(roi);
             cv::minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc);
 
-            circle(img, cv::Point(300 + maxLoc.x, maxLoc.y + 10), 8, cv::Scalar(0, 255, 255), -1);
+            circle(img, cv::Point(240 + maxLoc.x, maxLoc.y + 10), 8, cv::Scalar(0, 255, 255), -1);
 
             if (maxLoc.y < 390) {
-                if (290 + maxLoc.x < 300) game->makeAction(action[0]);
-                else if (290 + maxLoc.x > 340) game->makeAction(action[1]);
+                if (230 + maxLoc.x < 300) game->makeAction(action[0]);
+                else if (230 + maxLoc.x > 340) game->makeAction(action[1]);
                 else game->makeAction(action[3]);
             }
             else game->makeAction(action[0]);
@@ -295,7 +295,7 @@ void runTask3(int episodes) {
         std::cout << std::endl << game->getEpisodeTime() << std::endl;
     }
 }
-void runTask4(int episodes) { //теперь бот избегает бомбы, но средний результат ниже, нежели при сборе всего без разбора
+void runTask4(int episodes) {
     try
     {
         game->loadConfig(path + "/scenarios/task4.cfg");
@@ -342,22 +342,23 @@ void runTask4(int episodes) { //теперь бот избегает бомбы, но средний результат 
             result = result(roi);
             cv::minMaxLoc(result, &minval, &maxval, &minLoc, &maxLoc);
 
-            circle(img, cv::Point(290 + maxLoc.x, maxLoc.y), 8, cv::Scalar(0, 255, 255), -1);
+            circle(img, cv::Point(260 + maxLoc.x, maxLoc.y), 8, cv::Scalar(0, 255, 255), -1);
 
             whiteVal = 0;
-            for (int j = int(290 + maxLoc.x - 20); j < int(290 + maxLoc.x); j++) {
+            for (int j = int(260 + maxLoc.x - 5); j < int(260 + maxLoc.x + 20); j++) {
                 for (int k = int(maxLoc.y - 10); k < int(maxLoc.y + 20); k++) {
                     if (gray.at<uchar>(k, j) == 255) whiteVal++;
                 }
             }
-            circle(gray, cv::Point(290 + maxLoc.x, maxLoc.y), 8, cv::Scalar(255, 255, 255), 1);
+            circle(gray, cv::Point(260 + maxLoc.x, maxLoc.y), 8, cv::Scalar(255, 255, 255), 1);
+            //std::cout << result.at<float>(maxLoc.y, maxLoc.x) << " ";
 
             if (maxLoc.y < 390 && whiteVal < 30) {
-                if (290 + maxLoc.x < 300) game->makeAction(action[0]);
-                else if (290 + maxLoc.x > 340) game->makeAction(action[1]);
+                if (260 + maxLoc.x < 300) game->makeAction(action[0]);
+                else if (260 + maxLoc.x > 340) game->makeAction(action[1]);
                 else game->makeAction(action[3]);
             }
-            else for (int k = 0; k < 6; k++) game->makeAction(action[1]);
+            else for (int k = 0; k < 6; k++) game->makeAction(action[0]);
 
             cv::imshow("Origin", img);
             cv::imshow("Gray", gray);
@@ -438,7 +439,7 @@ void runTask5(int episodes) {
         std::cout << std::endl << game->getEpisodeTime() << std::endl;
     }
 }
-void runTask7(int episodes) {  //бот доворачивается в обе стороны для нахождения врагов
+void runTask7(int episodes) {  //ГЎГ®ГІ Г¤Г®ГўГ®Г°Г Г·ГЁГўГ ГҐГІГ±Гї Гў Г®ГЎГҐ Г±ГІГ®Г°Г®Г­Г» Г¤Г«Гї Г­Г ГµГ®Г¦Г¤ГҐГ­ГЁГї ГўГ°Г ГЈГ®Гў
     try {
         game->loadConfig(path + "/scenarios/task7.cfg");
         game->init();
@@ -636,7 +637,7 @@ int main()
 
     auto episodes = 10;
 
-    runTask5(episodes);
+    runTask4(episodes);
     std::cout << "Total Reward (or time): " << float(total) / episodes;
 
     game->close();
